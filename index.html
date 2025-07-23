@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>I Ching Hexagram Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .line-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 70px;
+      margin-bottom: 20px;
+    }
+
+    select {
+      padding: 5px;
+      font-size: 14px;
+    }
+
+    .line-box {
+      width: 150px;
+      height: 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .solid-line {
+      background-color: black;
+      width: 100%;
+      height: 20px;
+      border-radius: 4px;
+    }
+
+    .broken-line {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      height: 20px;
+    }
+
+    .broken-segment {
+      width: 45%;
+      height: 100%;
+      background-color: black;
+      border-radius: 4px;
+    }
+
+    .solid-line.blue,
+    .broken-segment.blue {
+      background-color: blue;
+    }
+
+    .hexagram-name-container {
+      display: flex;
+      justify-content: center;
+      gap: 150px;
+      margin-top: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      transform: translateX(70px);
+    }
+
+    #question-input {
+      width: 50%;
+      padding: 20px;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+
+    #auto-button {
+      margin-bottom: 30px; /* 간격 추가 */
+    }
+  </style>
+</head>
+<body>
+
+  <h1>I Ching Hexagram Generator</h1>
+
+  <input type="text" id="question-input" placeholder="주역점에게 물어보고 싶은 질문을 입력하세요">
+  <br><br>
+  <button id="auto-button" onclick="generateRandomHexagram()">자동</button>
+
+  <div id="lineArea"></div>
+
+  <div class="hexagram-name-container">
+    <div id="hexagramName">본괘</div>
+    <div id="jiHexagramName">지괘</div>
+  </div>
+
+  <script>
+    const hexagramNames = {
+      "건건":"1. 중천건", "곤곤":"2. 중지곤", "감진":"3. 수뢰둔", "간감":"4. 산수몽",
+      "감건":"5. 수천수", "건감":"6. 천수송", "곤감":"7. 지수사", "감곤":"8. 수지비",
+      "손건":"9. 풍천소축", "건태":"10. 천택리", "곤건":"11. 지천태", "건곤":"12. 천지비",
+      "건리":"13. 천화동인", "리건":"14. 화천대유", "곤간":"15. 지산겸", "진곤":"16. 뇌지예",
+      "태진":"17. 택뢰수", "간손":"18. 산풍고", "곤태":"19. 지택림", "손곤":"20. 풍지관",
+      "리진":"21. 화뢰서합", "간리":"22. 산화비", "간곤":"23. 산지박", "곤진":"24. 지뢰복",
+      "건진":"25. 천뢰무망", "간건":"26. 산천대축", "간진":"27. 산뢰이", "태손":"28. 택풍대과",
+      "감감":"29. 중수감", "리리":"30. 중화리", "태간":"31. 택산함", "진손":"32. 뇌풍항",
+      "건간":"33. 천산둔", "진건":"34. 뇌천대장", "리곤":"35. 화지진", "곤리":"36. 지화명이",
+      "손리":"37. 풍화가인", "리태":"38. 화택규", "감간":"39. 수산건", "진감":"40. 뇌수해",
+      "간태":"41. 산택손", "손진":"42. 풍뢰익", "태건":"43. 택천쾌", "건손":"44. 천풍구",
+      "태곤":"45. 택지췌", "곤손":"46. 지풍승", "태감":"47. 택수곤", "감손":"48. 수풍정",
+      "태리":"49. 택화혁", "리손":"50. 화풍정", "진진":"51. 중뢰진", "간간":"52. 중산간",
+      "손간":"53. 풍산점", "진태":"54. 뇌택귀매", "진리":"55. 뇌화풍", "리간":"56. 화산려",
+      "손손":"57. 손위풍", "태태":"58. 태위택", "손감":"59. 풍수환", "감태":"60. 수택절",
+      "손태":"61. 풍택중부", "진간":"62. 뇌산소과", "감리":"63. 수화기제", "리감":"64. 화수미제"
+    };
+
+    function getClass(value, isJiGwae) {
+      if (!isJiGwae) {
+        if (value === '1') return 'solid blue';
+        if (value === '8') return 'broken blue';
+        if (['4', '6', '7'].includes(value)) return 'solid';
+        return 'broken';
+      }
+      if (value === '1') return 'broken';
+      if (value === '8') return 'solid';
+      if (['4', '6', '7'].includes(value)) return 'solid';
+      return 'broken';
+    }
+
+    function getTrigram(lines) {
+      return lines.map(v => ['1', '4', '6', '7'].includes(v) ? 'solid' : 'broken').join(',');
+    }
+
+    function trigramToSymbol(tri) {
+      const map = {
+        "solid,solid,solid": "건", "broken,broken,broken": "곤",
+        "broken,solid,broken": "감", "solid,broken,solid": "리",
+        "solid,solid,broken": "태", "broken,solid,solid": "손",
+        "solid,broken,broken": "진", "broken,broken,solid": "간"
+      };
+      return map[tri] || "";
+    }
+
+    function renderLine(type) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "line-box";
+      if (type.startsWith("solid")) {
+        const div = document.createElement("div");
+        div.className = "solid-line" + (type.includes("blue") ? " blue" : "");
+        wrapper.appendChild(div);
+      } else {
+        const broken = document.createElement("div");
+        broken.className = "broken-line";
+        const left = document.createElement("div");
+        const right = document.createElement("div");
+        left.className = right.className = "broken-segment" + (type.includes("blue") ? " blue" : "");
+        broken.appendChild(left);
+        broken.appendChild(right);
+        wrapper.appendChild(broken);
+      }
+      return wrapper;
+    }
+
+    function updateHexagram() {
+      const lines = [];
+      for (let i = 1; i <= 6; i++) {
+        lines.push(document.getElementById('line' + i).value);
+      }
+
+      const lower = trigramToSymbol(getTrigram(lines.slice(0, 3)));
+      const upper = trigramToSymbol(getTrigram(lines.slice(3, 6)));
+      const hexKey = upper + lower;
+
+      const changed = lines.map(v => {
+        if (v === '1') return '8';
+        if (v === '8') return '1';
+        return v;
+      });
+
+      const lowerJi = trigramToSymbol(getTrigram(changed.slice(0, 3)));
+      const upperJi = trigramToSymbol(getTrigram(changed.slice(3, 6)));
+      const jiKey = upperJi + lowerJi;
+
+      for (let i = 6; i >= 1; i--) {
+        const val = document.getElementById('line' + i).value;
+        document.getElementById('bonGwae' + i).innerHTML = '';
+        document.getElementById('jiGwae' + i).innerHTML = '';
+        document.getElementById('bonGwae' + i).appendChild(renderLine(getClass(val, false)));
+        document.getElementById('jiGwae' + i).appendChild(renderLine(getClass(val, true)));
+      }
+
+      document.getElementById('hexagramName').textContent = hexagramNames[hexKey] || hexKey;
+      document.getElementById('jiHexagramName').textContent = hexagramNames[jiKey] || jiKey;
+    }
+
+    function generateRandomHexagram() {
+      for (let i = 1; i <= 6; i++) {
+        const rand = Math.floor(Math.random() * 8) + 1;
+        document.getElementById('line' + i).value = rand;
+      }
+      updateHexagram();
+    }
+
+    const lineArea = document.getElementById('lineArea');
+    for (let i = 6; i >= 1; i--) {
+      const row = document.createElement("div");
+      row.className = "line-row";
+
+      const select = document.createElement("select");
+      select.id = "line" + i;
+      select.innerHTML = `
+        <option value="1">1: 건천</option>
+        <option value="2">2: 태택</option>
+        <option value="3">3: 리화</option>
+        <option value="4" selected>4: 뇌진</option>
+        <option value="5">5: 손풍</option>
+        <option value="6">6: 감수</option>
+        <option value="7">7: 간산</option>
+        <option value="8">8: 곤지</option>
+      `;
+      select.onchange = updateHexagram;
+
+      const bon = document.createElement("div");
+      bon.id = "bonGwae" + i;
+      const ji = document.createElement("div");
+      ji.id = "jiGwae" + i;
+
+      row.appendChild(select);
+      row.appendChild(bon);
+      row.appendChild(ji);
+      lineArea.appendChild(row);
+    }
+
+    updateHexagram();
+  </script>
+</body>
+</html>
