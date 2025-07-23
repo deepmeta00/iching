@@ -234,5 +234,40 @@
 
     updateHexagram();
   </script>
+
+  <!-- 👉 추가된 CTA 스크립트 + 푸터 시작 -->
+  <script>
+    function goToBlog() {
+      const q   = document.getElementById('question-input') ? document.getElementById('question-input').value : '질문 없음';
+      const bon = document.getElementById('hexagramName')   ? document.getElementById('hexagramName').textContent : '';
+      const ji  = document.getElementById('jiHexagramName') ? document.getElementById('jiHexagramName').textContent : '';
+
+      const comment = `[주역점 결과 공유]
+본괘 : ${bon}
+지괘 : ${ji}
+질문 : ${q}
+감사합니다!`;
+
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(comment).then(() => {
+          window.open('https://blog.naver.com/deepmeta/223944469688#comment', '_blank');
+        });
+      } else {
+        window.open('https://blog.naver.com/deepmeta/223944469688#comment', '_blank');
+        alert('클립보드 복사 기능을 지원하지 않는 브라우저입니다. 댓글창에서 Ctrl+V로 붙여넣기 해주세요.');
+      }
+    }
+  </script>
+
+  <footer style="margin:40px 0; text-align:center;">
+    <button onclick="goToBlog()" style="padding:12px 24px; font-size:16px; cursor:pointer;">
+      🔮 결과 공유하고 블로그 댓글 달기
+    </button>
+    <p style="font-size:13px; margin-top:8px;">
+      (버튼을 누르면 결과 문구가 클립보드에 저장되고&nbsp;블로그 댓글창이 새 탭으로 열립니다)
+    </p>
+  </footer>
+  <!-- 👆 추가된 CTA 스크립트 + 푸터 끝 -->
+
 </body>
 </html>
